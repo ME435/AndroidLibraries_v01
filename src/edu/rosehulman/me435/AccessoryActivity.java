@@ -135,7 +135,7 @@ public class AccessoryActivity extends Activity {
 
   @Override
   protected void onStart() {
-    super.onResume();
+    super.onStart();
     if (mInputStream != null && mOutputStream != null) {
       return;
     }
