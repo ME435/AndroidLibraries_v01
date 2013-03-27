@@ -22,7 +22,7 @@ public class AccessoryActivity extends Activity {
 
   private static final String TAG = AccessoryActivity.class.getSimpleName();
   private PendingIntent mPermissionIntent;
-  private static final String ACTION_USB_PERMISSION = "edu.rosehulman.armscripts.action.USB_PERMISSION";
+  private static final String ACTION_USB_PERMISSION = "edu.rosehulman.me435.action.USB_PERMISSION";
   private boolean mPermissionRequestPending;
   private UsbManager mUsbManager;
   private UsbAccessory mAccessory;
