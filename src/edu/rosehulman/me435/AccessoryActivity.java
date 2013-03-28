@@ -134,8 +134,8 @@ public class AccessoryActivity extends Activity {
   }
 
   @Override
-  protected void onStart() {
-    super.onStart();
+  protected void onResume() {
+    super.onResume();
     if (mInputStream != null && mOutputStream != null) {
       return;
     }
@@ -193,8 +193,8 @@ public class AccessoryActivity extends Activity {
   }
 
   @Override
-  protected void onStop() {
-    super.onStop();
+  protected void onPause() {
+    super.onPause();
     closeAccessory();
   }
 
