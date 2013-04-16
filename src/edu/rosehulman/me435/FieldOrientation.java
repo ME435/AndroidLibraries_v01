@@ -119,6 +119,11 @@ public class FieldOrientation implements SensorEventListener {
   public void onSensorChanged(SensorEvent event) {
     if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
       SensorManager.getRotationMatrixFromVector(mRotationMatrix, event.values);
+      
+      SensorManager.remapCoordinateSystem(mRotationMatrix,
+              SensorManager.AXIS_X, SensorManager.AXIS_Z,
+              mRotationMatrix);
+      
       SensorManager.getOrientation(mRotationMatrix, mOrientationValues);
       mOrientationValues[0] = (float) Math.toDegrees(mOrientationValues[0]);
       mOrientationValues[1] = (float) Math.toDegrees(mOrientationValues[1]);

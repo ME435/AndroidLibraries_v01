@@ -30,9 +30,9 @@ public class AccessoryActivity extends Activity {
   private FileInputStream mInputStream;
   private FileOutputStream mOutputStream;
 
-  
 
-  Runnable mRxRunnable = new Runnable() {
+  // Rx runnable.
+  private Runnable mRxRunnable = new Runnable() {
 
     public void run() {
       int ret = 0;
@@ -165,13 +165,13 @@ public class AccessoryActivity extends Activity {
     Log.d(TAG, "Open accessory called.");
     mFileDescriptor = mUsbManager.openAccessory(accessory);
     if (mFileDescriptor != null) {
+      Log.d(TAG, "accessory opened");
       mAccessory = accessory;
       FileDescriptor fd = mFileDescriptor.getFileDescriptor();
       mInputStream = new FileInputStream(fd);
       mOutputStream = new FileOutputStream(fd);
       Thread thread = new Thread(null, mRxRunnable, TAG);
       thread.start();
-      Log.d(TAG, "accessory opened");
     } else {
       Log.d(TAG, "accessory open fail");
     }
