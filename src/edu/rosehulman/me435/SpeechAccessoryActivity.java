@@ -37,6 +37,7 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 	private static final String KEYWORD_ANGLE = "angle";
 	private static final String KEYWORD_DISTANCE = "distance";
 	private static final String KEYWORD_NEGATIVE = "negative";
+	private static final int DEFAULT_DISTANCE = 10;
 	protected String mRobotName = null;
 
 	// Rx runnable.
@@ -252,6 +253,7 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 		Log.d(TAG, "languageCheckResult");
 	}
 
+
 	@Override
 	protected void receiveWhatWasHeard(List<String> heard,
 			float[] confidenceScores) {
@@ -260,9 +262,8 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 			if (mRobotName == null || command.contains(mRobotName)) {
 				// We have a command for this robot.
 				boolean negativeAngle = false, negativeDistance = false;
-				if (command.contains(KEYWORD_ANGLE)
-						&& command.contains(KEYWORD_DISTANCE)) {
-					// We have an angle + distance command.
+				if (command.contains(KEYWORD_ANGLE)) {
+					// We have an angle command.
 					int[] numericValues = new int[2];
 					String wordAfterAngle = getNextWord(command, KEYWORD_ANGLE);
 					if (wordAfterAngle.equalsIgnoreCase(KEYWORD_NEGATIVE)) {
@@ -270,32 +271,41 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 						wordAfterAngle = getNextWord(command, KEYWORD_NEGATIVE);
 					}
 					if (convertWordToInt(wordAfterAngle, numericValues, 0)) {
-						// Got an angle next get a distance
-						String wordAfterDistance = getNextWord(command,
-								KEYWORD_DISTANCE);
-						if (wordAfterDistance
-								.equalsIgnoreCase(KEYWORD_NEGATIVE)) {
-							negativeDistance = true;
-							wordAfterDistance = getNextWord(
-									command.substring(command
-											.indexOf(KEYWORD_DISTANCE)),
-									KEYWORD_NEGATIVE);
+						// Got an angle next get a distance if available.
+						numericValues[1] = DEFAULT_DISTANCE;
+						if (command.contains(KEYWORD_DISTANCE)) {
+							String wordAfterDistance = getNextWord(command,
+									KEYWORD_DISTANCE);
+							if (wordAfterDistance
+									.equalsIgnoreCase(KEYWORD_NEGATIVE)) {
+								negativeDistance = true;
+								wordAfterDistance = getNextWord(
+										command.substring(command
+												.indexOf(KEYWORD_DISTANCE)),
+										KEYWORD_NEGATIVE);
+							}
+							convertWordToInt(wordAfterDistance, numericValues, 1);							
 						}
-						if (convertWordToInt(wordAfterDistance, numericValues,
-								1)) {
-							int angle = negativeAngle ? -numericValues[0]
-									: numericValues[0];
-							int distance = negativeDistance ? -numericValues[1]
-									: numericValues[1];
-							onVoiceCommand(angle, distance);
-							break;
-						}
+						int angle = negativeAngle ? -numericValues[0]
+								: numericValues[0];
+						int distance = negativeDistance ? -numericValues[1]
+								: numericValues[1];
+						onVoiceCommand(angle, distance);
+						break;
 					}
 				}
 			}
 		}
 	}
 
+	/**
+	 * Helper method to get the next word, which is hopefully a number.
+	 * For example after the word "angle" you hope the next word is a number.
+	 * 
+	 * @param command Entire command heard.
+	 * @param keyword Keyword ("angle" or "distance") to look after.
+	 * @return The String after the keyword.  "" if none is found.
+	 */
 	private String getNextWord(String command, String keyword) {
 		String nextWord = "";
 		int startIndex = command.indexOf(keyword) + keyword.length() + 1;
@@ -312,6 +322,14 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 		return nextWord;
 	}
 
+	/**
+	 * Converts a string to a number.
+	 * 
+	 * @param potentialNumber String the is hopefully a number.
+	 * @param numericValues An array to populate with the number.
+	 * @param index The array index to populate with the number.
+	 * @return True if the String is a number.
+	 */
 	private boolean convertWordToInt(String potentialNumber,
 			int[] numericValues, int index) {
 		try {
@@ -325,6 +343,15 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 		return true;
 	}
 
+	/**
+	 * Helper method to convert words like "one" into an int.
+	 * Uses a brute force approach to convert common words to ints.
+	 *
+	 * @param potentialNumber String that might be a written out number.
+	 * @param numericValues An array to populate with the number.
+	 * @param index The array index to populate with the number.
+	 * @return True if the String is a number.
+	 */
 	private boolean isSignalDigitWord(String potentialNumber,
 			int[] numericValues, int index) {
 		if (potentialNumber.equalsIgnoreCase("zero")) {
@@ -364,6 +391,13 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 		return false;
 	}
 
+	/**
+	 * This method is called if a valid voice command is received.
+	 * Subclasses of this activity should override this method so
+	 * that they can actually do something with the command.
+	 * @param angle
+	 * @param distance
+	 */
 	protected void onVoiceCommand(int angle, int distance) {
 		Log.d(TAG, "Voice command for angle " + angle + " distance " + distance);
 	}
