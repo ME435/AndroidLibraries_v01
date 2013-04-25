@@ -395,8 +395,9 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 	 * This method is called if a valid voice command is received.
 	 * Subclasses of this activity should override this method so
 	 * that they can actually do something with the command.
-	 * @param angle
-	 * @param distance
+	 * 
+	 * @param angle Angle heard in voice command.
+	 * @param distance Distance heard in voice command.
 	 */
 	protected void onVoiceCommand(int angle, int distance) {
 		Log.d(TAG, "Voice command for angle " + angle + " distance " + distance);

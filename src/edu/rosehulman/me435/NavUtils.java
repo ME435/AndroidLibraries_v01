@@ -10,31 +10,33 @@ public class NavUtils {
 
 	/** Largest radius value. Arcs with a larger radius are straight. */
 	public static final double MAX_RADIUS_FT = 1000.0;
-	
+
 	/** Smallest radius value. If smaller STOP. You are at the target. */
 	public static final double MIN_RADIUS_FT = 1.0;
-	
+
 	/** Largest recommended turn angle to use Arc Radius strategy. */
 	public static final double RECOMMEND_MAX_TURN_DEGREES = 90.0;
-	
+
 	/** Largest recommended arc length to drive. */
 	public static final double RECOMMEND_MAX_ARC_LENGHT_FT = 150.0;
-	
+
 	/**
-	 * Smallest recommended radius for the arc strategy.
-	 * If smaller STOP. You are at the target.
+	 * Smallest recommended radius for the arc strategy. If smaller STOP. You
+	 * are at the target.
 	 */
 	public static final double RECOMMEND_MIN_RADIUS_FT = 2.0;
-	
-	/** Arbitrary large value that is returned if pointing dead away from target.*/
+
+	/**
+	 * Arbitrary large value that is returned if pointing dead away from target.
+	 */
 	public static final double MAX_ARC_LENGTH_FT = 1000.0;
-	
+
 	/** Error tolerance that is acceptable when using bisection for arc radius. */
 	public static final double BISECTION_ERROR_TOLERANCE_FT = 0.01;
-	
+
 	/** Index of the radius value in the result array. */
 	public static final int RESULT_INDEX_RADIUS = 0;
-	
+
 	/** Index of the arc length value in the result array. */
 	public static final int RESULT_INDEX_ARC_LENGTH = 1;
 
@@ -75,32 +77,43 @@ public class NavUtils {
 			double robotHeading, double targetX, double targetY, double[] result) {
 
 		// Calculate the angle needed to get to the target
-		double targetHeading = getTargetHeading(robotX, robotY, targetX, targetY);
+		double targetHeading = getTargetHeading(robotX, robotY, targetX,
+				targetY);
 		// Determine if the Arc Radius strategy is recommended
-		double leftTurnAmount = getLeftTurnHeadingDelta(robotHeading, targetHeading);
-		double rightTurnAmount = getRightTurnHeadingDelta(robotHeading, targetHeading);
+		double leftTurnAmount = getLeftTurnHeadingDelta(robotHeading,
+				targetHeading);
+		double rightTurnAmount = getRightTurnHeadingDelta(robotHeading,
+				targetHeading);
 		boolean arcRadiusIsRecommend = leftTurnAmount < RECOMMEND_MAX_TURN_DEGREES
 				|| rightTurnAmount < RECOMMEND_MAX_TURN_DEGREES;
 
 		// Determine if the target is on the left or the right
-		boolean targetOnLeft = targetIsOnLeft(robotX, robotY, robotHeading, targetX, targetY);
+		boolean targetOnLeft = targetIsOnLeft(robotX, robotY, robotHeading,
+				targetX, targetY);
 		// Prepare for bisection by checking the extremes first.
 		double lowerRadius = targetOnLeft ? -MIN_RADIUS_FT : MIN_RADIUS_FT;
 		double upperRadius = targetOnLeft ? -MAX_RADIUS_FT : MAX_RADIUS_FT;
 
 		// See if the target XY is within the very large circle
-		if (!circleContainsTarget(upperRadius, robotX, robotY, robotHeading, targetX, targetY)) {
-			// The robot heading is pointing directly at the target (or directly away).
-			result[RESULT_INDEX_RADIUS] = targetOnLeft ? -MAX_RADIUS_FT : MAX_RADIUS_FT;
+		if (!circleContainsTarget(upperRadius, robotX, robotY, robotHeading,
+				targetX, targetY)) {
+			// The robot heading is pointing directly at the target (or directly
+			// away).
+			result[RESULT_INDEX_RADIUS] = targetOnLeft ? -MAX_RADIUS_FT
+					: MAX_RADIUS_FT;
 			if (arcRadiusIsRecommend) {
-				result[RESULT_INDEX_ARC_LENGTH] = getDistance(robotX, robotY, targetX, targetY);
+				result[RESULT_INDEX_ARC_LENGTH] = getDistance(robotX, robotY,
+						targetX, targetY);
 			} else {
 				result[RESULT_INDEX_ARC_LENGTH] = MAX_ARC_LENGTH_FT;
 			}
-		} else if (circleContainsTarget(lowerRadius, robotX, robotY, robotHeading, targetX, targetY)) {
+		} else if (circleContainsTarget(lowerRadius, robotX, robotY,
+				robotHeading, targetX, targetY)) {
 			// The robot is too close to the target and has a small turn radius.
-			result[RESULT_INDEX_RADIUS] = targetOnLeft ? -MIN_RADIUS_FT : MIN_RADIUS_FT;
-			result[RESULT_INDEX_ARC_LENGTH] = 0; // Don't drive if within a foot.
+			result[RESULT_INDEX_RADIUS] = targetOnLeft ? -MIN_RADIUS_FT
+					: MIN_RADIUS_FT;
+			result[RESULT_INDEX_ARC_LENGTH] = 0; // Don't drive if within a
+													// foot.
 		} else {
 			// Normal value not an edge case. Use bisection to find radius.
 			result[RESULT_INDEX_RADIUS] = bisectionForRadius(lowerRadius,
@@ -113,7 +126,7 @@ public class NavUtils {
 
 		// Check if the result is recommended for the arc radius strategy.
 		if (Math.abs(result[RESULT_INDEX_RADIUS]) < RECOMMEND_MIN_RADIUS_FT) {
-			// Robot is at the target.  Stop!
+			// Robot is at the target. Stop!
 			arcRadiusIsRecommend = false;
 		}
 		if (result[RESULT_INDEX_ARC_LENGTH] > RECOMMEND_MAX_ARC_LENGHT_FT) {
@@ -121,6 +134,38 @@ public class NavUtils {
 			arcRadiusIsRecommend = false;
 		}
 		return arcRadiusIsRecommend;
+	}
+
+	/**
+	 * Method for converting a voice command angle and distance to an arc
+	 * radius.
+	 * 
+	 * @param angle
+	 *            Angle given in the voice command. When I ride on the robot I
+	 *            think of negative as left. So 0 is straight ahead, -30 is a
+	 *            left turn, 150 would be a supper hard right turn.
+	 * 
+	 * @param distance
+	 *            Distance in feet from the robot to the target.
+	 * @param result
+	 *            A boolean to indicate if the Arc Radius strategy is
+	 *            recommended. An arc can always be found, but imagine you were
+	 *            1 foot away driving away, the arc radius strategy would have
+	 *            you drive a VERY large radius circle instead of just turning
+	 *            around (or backing up). In general only angles already
+	 *            pointing towards (plus or minus 70-90 degrees) work well with
+	 *            the Arc Radius strategy.
+	 * @return True if the arc radius strategy is recommended, false otherwise.
+	 */
+	public static boolean calculateArcForVoiceCommand(int angle, int distance,
+			double[] result) {
+		double robotX = -distance * Math.cos(Math.toRadians(-angle));
+		double robotY = -distance * Math.sin(Math.toRadians(-angle));
+		double robotHeading = 0;
+		double targetX = 0;
+		double targetY = 0;
+		return calculateArc(robotX, robotY, robotHeading, targetX, targetY,
+				result);
 	}
 
 	/**
