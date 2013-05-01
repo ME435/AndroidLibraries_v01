@@ -67,7 +67,7 @@ public class NavUtils {
 	 *            A boolean to indicate if the Arc Radius strategy is
 	 *            recommended. An arc can always be found, but imagine you were
 	 *            1 foot away driving away, the arc radius strategy would have
-	 *            you drive a VERY large radius cicle instead of just turning
+	 *            you drive a VERY large radius circle instead of just turning
 	 *            around. In general only angles already pointing towards (plus
 	 *            or minus 70-90 degrees) work well with the Arc Radius
 	 *            strategy.

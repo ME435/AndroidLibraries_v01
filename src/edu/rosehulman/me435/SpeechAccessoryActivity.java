@@ -28,11 +28,11 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 	private PendingIntent mPermissionIntent;
 	private static final String ACTION_USB_PERMISSION = "edu.rosehulman.me435.action.USB_PERMISSION";
 	private boolean mPermissionRequestPending;
-	private UsbManager mUsbManager;
-	private UsbAccessory mAccessory;
-	private ParcelFileDescriptor mFileDescriptor;
-	private FileInputStream mInputStream;
-	private FileOutputStream mOutputStream;
+	protected UsbManager mUsbManager;
+	protected UsbAccessory mAccessory;
+	protected ParcelFileDescriptor mFileDescriptor;
+	protected FileInputStream mInputStream;
+	protected FileOutputStream mOutputStream;
 
 	private static final String KEYWORD_ANGLE = "angle";
 	private static final String KEYWORD_DISTANCE = "distance";
@@ -45,14 +45,19 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 
 		public void run() {
 			int ret = 0;
-			byte[] buffer = new byte[255];
+			byte[] buffer = new byte[16384];
 
+			
 			// Loop that runs forever (or until a -1 error state).
 			while (ret >= 0) {
-				try {
-					ret = mInputStream.read(buffer);
-				} catch (IOException e) {
-					break;
+				if (mAccessory != null && mFileDescriptor != null && mInputStream != null) {
+					try {
+						if (mInputStream.available() > 0) {
+							ret = mInputStream.read(buffer);					
+						}
+					} catch (IOException e) {
+						break;
+					}
 				}
 
 				if (ret > 0) {
@@ -206,8 +211,8 @@ public class SpeechAccessoryActivity extends SpeechRecognizingActivity {
 
 	@Override
 	protected void onPause() {
-		super.onPause();
 		closeAccessory();
+		super.onPause();
 	}
 
 	@Override
