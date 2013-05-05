@@ -4,8 +4,9 @@ import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
-import android.app.Activity;
+import root.gast.speech.SpeechRecognizingActivity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -18,7 +19,7 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
-public class AccessoryActivity extends Activity {
+public class AccessoryActivity extends SpeechRecognizingActivity {
 
   private static final String TAG = AccessoryActivity.class.getSimpleName();
   private PendingIntent mPermissionIntent;
@@ -40,11 +41,15 @@ public class AccessoryActivity extends Activity {
 
       // Loop that runs forever (or until a -1 error state).
       while (ret >= 0) {
-        try {
-          ret = mInputStream.read(buffer);
-        } catch (IOException e) {
-          break;
-        }
+			if (mAccessory != null && mFileDescriptor != null && mInputStream != null) {
+				try {
+					if (mInputStream.available() > 0) {
+						ret = mInputStream.read(buffer);					
+					}
+				} catch (IOException e) {
+					break;
+				}
+			}
         
         if (ret > 0) {
           // Convert the bytes into a string.
@@ -194,8 +199,8 @@ public class AccessoryActivity extends Activity {
 
   @Override
   protected void onPause() {
-    super.onPause();
     closeAccessory();
+    super.onPause();
   }
 
   @Override
@@ -203,4 +208,18 @@ public class AccessoryActivity extends Activity {
     super.onDestroy();
     unregisterReceiver(mUsbReceiver);
   }
+
+	// ------------ Speech area --------------------------
+	// Intentionally not implemented here.
+	@Override
+	protected void speechNotAvailable() {}
+	@Override
+	protected void directSpeechNotAvailable() {}
+	@Override
+	protected void languageCheckResult(String languageToUse) {}
+	@Override
+	protected void receiveWhatWasHeard(List<String> heard,
+			float[] confidenceScores) {}
+	@Override
+	protected void recognitionFailure(int errorCode) {}
 }

@@ -72,7 +72,7 @@ public class FieldOrientation implements SensorEventListener {
    * @param fieldBearing
    *          Bearing of the field, degrees East of North.
    */
-  private void setFieldBearing(float fieldBearing) {
+  public void setFieldBearing(float fieldBearing) {
     mFieldBearing = fieldBearing;
   }
 
