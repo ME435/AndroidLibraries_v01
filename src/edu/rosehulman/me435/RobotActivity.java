@@ -6,17 +6,27 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-
 import android.location.Location;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.WindowManager;
 
-public class RobotActivity extends TtsAccessoryActivity implements FieldGpsListener,
+/**
+ * 
+ * TODO: Add a cheat sheet for commands
+ * 
+ * from ...
+ *   call...
+ *   override...
+ * from ...
+ *   call...
+ *   override...
+ * 
+ * @author fisherds
+ *
+ */
+public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsListener,
 FieldOrientationListener {
 
 	/** TAG used in log messages set to RobotActivity. */
@@ -27,6 +37,9 @@ FieldOrientationListener {
 
 	/** Field orientation instance that gives field heading via sensors. */
 	protected FieldOrientation mFieldOrientation;
+	
+	/** Text to speech helper.  Used for speech and simple sounds. */
+	protected TextToSpeechHelper mTts;
 	
 	// GPS member variables.
 	/** Most recent readings of the GPS. */
@@ -72,7 +85,7 @@ FieldOrientationListener {
 	protected boolean mTalkingGps = false;
 
 	/** When testing you can beep for all GPS readings. */
-	protected boolean mBeepingGps = true;
+	protected boolean mBeepingGps = false;
 	
 	// Movement
 	/** Most recent sensor heading (updates MANY times per second). */
@@ -138,6 +151,9 @@ FieldOrientationListener {
 		// Assume you are on the red team to start the app (can be changed later).
 		mFieldGps = new FieldGps(this, RED_HOME_LATITUDE, RED_HOME_LONGITUDE, BLUE_HOME_LATITUDE, BLUE_HOME_LONGITUDE);
 		mFieldOrientation = new FieldOrientation(this, RED_HOME_LATITUDE, RED_HOME_LONGITUDE, BLUE_HOME_LATITUDE, BLUE_HOME_LONGITUDE);
+		
+		// Prepare for TextToSpeech
+		mTts = new TextToSpeechHelper(this);
 	}
 	
 	public void setTeamToRed(boolean isRed) {
@@ -201,12 +217,12 @@ FieldOrientationListener {
 	    	if (mMovingStraight) {
 		        mFieldOrientation.setCurrentFieldHeading(mCurrentGpsHeading);
 		        if (mTalkingGps) {
-		        	speak("GPS X " + Math.round(mCurrentGpsX) + " Y " + Math.round(mCurrentGpsY) +
+		        	mTts.speak("GPS X " + Math.round(mCurrentGpsX) + " Y " + Math.round(mCurrentGpsY) +
 		        			" heading " + Math.round(mCurrentSensorHeading) + " used to reset sensor");
 		        }
 	    	} else {
 	    		if (mTalkingGps) {
-		        	speak("GPS X " + Math.round(mCurrentGpsX) + " Y " + Math.round(mCurrentGpsY) +
+	    			mTts.speak("GPS X " + Math.round(mCurrentGpsX) + " Y " + Math.round(mCurrentGpsY) +
 		        			" with heading " + Math.round(mCurrentSensorHeading));
 	    		}
 			}
@@ -215,12 +231,12 @@ FieldOrientationListener {
 	        }
 	    } else {
 	    	if (mTalkingGps) {
-	    		speak("GPS X " + Math.round(mCurrentGpsX) + " Y " + Math.round(mCurrentGpsY));
+	    		mTts.speak("GPS X " + Math.round(mCurrentGpsX) + " Y " + Math.round(mCurrentGpsY));
 	    	}
 	        if (mBeepingGps) {
-	        	playNotificationBeep();
+	        	gpsBeep();
 	        }
-	        // Consider reseting the sensor heading using the calculated heading.
+	        // Reseting the sensor heading using the calculated heading.
 	        int calculatedGpsTrustThresholdCount = 3;
 	        if (mMovingStraight && mSavedCalculatedGpsHeadings.size() > calculatedGpsTrustThresholdCount) {
 		        boolean resetSensorHeadingToCalculatedGpsHeading = true;
@@ -237,7 +253,7 @@ FieldOrientationListener {
 			        mFieldOrientation.setCurrentFieldHeading(mCurrentCalculatedGpsHeading);
 			        // Note, I could take an average of the last few readings instead.
 			        if (mTalkingGps) {
-			        	speak("GPS calculated heading " + Math.round(mCurrentCalculatedGpsHeading) + " used to reset sensor");
+			        	mTts.speak("GPS calculated heading " + Math.round(mCurrentCalculatedGpsHeading) + " used to reset sensor");
 			        }
 			        if (mBeepingGps) {
 			        	headingBeep();
@@ -318,29 +334,33 @@ FieldOrientationListener {
 				rightMode + " " + rightDutyCycle;
 		sendCommand(command);
 	}
-
+	
+	// --------------- Audio Out for debugging -----------------------------
 	
 	/**
-	 * Helper to generate multiple beeps.  1 or 2 recommend, 3 is pushing it.
-	 * Notice you may need to visit Settings -> Sound -> Volumes to turn up
-	 * the Notification sound.
-	 * 
-	 * @param numberOfBeeps Number of beeps.
+	 * Simple wrapper to allow subclasses to call speak instead of mTts.speak.
+	 * Pretty optional, as it doesn't do much.
+	 *
+	 * @param messageToSpeak String to speak.
 	 */
-	protected void beep(int numberOfBeeps) {
-		playNotificationBeep();
-		long beepLength = 400;
-		for (int i = 1; i < numberOfBeeps; i++) {
-			mCommandHandler.postDelayed(new Runnable() {
-				@Override
-				public void run() {
-					playNotificationBeep();
-				}
-			}, i * beepLength);			
-		}
+	protected void speak(String messageToSpeak) {
+		mTts.stopRingtone();
+		mTts.speak(messageToSpeak);
 	}
 	
+	/**
+	 * When a GPS reading occurs (which does not have a heading) play this sound.
+	 */
+	protected void gpsBeep() {
+		mTts.stopRingtone();
+		mTts.playNotificationBeep();
+	}
+
+	/**
+	 * When a GPS reading has a heading play this sound.
+	 */
 	protected void headingBeep() {
-		playValidRingtone();
+		mTts.stopRingtone();
+		mTts.playValidRingtone();
 	}
 }
