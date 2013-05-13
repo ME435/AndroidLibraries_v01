@@ -13,17 +13,38 @@ import android.util.Log;
 import android.view.WindowManager;
 
 /**
+ * This class is intended to be subclasses by your main activity.  It subclasses the
+ * SpeechAccessoryActivity so you get all of those features.  Let's review the features
+ * available due to AccessoryActivity and SpeechAccessoryActivity.
  * 
- * TODO: Add a cheat sheet for commands
+ * From AccessoryActivity:
+ *   You can call sendCommand and pass a String to send to Arduino
+ *   You can override onCommandReceived to receive commands from Arduino.
+ *   
+ * From SpeechAccessoryActivity:
+ *   You can call startListening to well, start listening for voice
+ *   You can override receiveWhatWasHeard to get raw data.
+ *   OR you can override onVoiceCommand to get an angle/distance command.
+ *   (in short SpeechAccessoryActivity does some parsing of the raw data to do a
+ *       basic parsing task, but you could use voice however you like.)
  * 
- * from ...
- *   call...
- *   override...
- * from ...
- *   call...
- *   override...
+ * In addition to the features from the superclasses, this Activity creates other
+ * library helpers like FieldGps, FieldOrientation, and TextToSpeechHelper.  It starts
+ * each of those tools and shows how to use them.  The primary purpose of this activity
+ * is simply to set member variables from the GPS and orientation sensor.  In order to
+ * use this activity you need need to send all wheel speed commands through the
+ * sendWheelSpeed method.
  * 
- * @author fisherds
+ * It looks like a lot of code but really it's just saving you the trouble of creating
+ * member variables for things like mCurrentGpsX etc.  In your subclass make sure to always
+ * call this parent activity if you implement functions like onCreate, onLocationChanged,
+ * onVoiceCommand, etc.
+ * 
+ * This Activity intentionally does NOT implement a FSM.  That changes too often and
+ * is NOT included in this layer.  Your layer can focus on the FSM and other features
+ * you need and let this layer save member variables for real world feedback.
+ * 
+ * @author fisherds@gmail.com (Dave Fisher)
  *
  */
 public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsListener,
@@ -309,6 +330,16 @@ FieldOrientationListener {
 		mFieldGps.removeUpdates();
 	}
 	
+	/**
+	 * ALWAYS use this method when sending a wheel speed command.  It tracks
+	 * the latest command sent and keeps track of when the robot is going
+	 * straight forward to decide when to use GPS headings to reset the sensor
+	 * heading.
+	 * 
+	 * @param leftDutyCycle -255 to 255 (0 to stop for the left wheel duty cycle)
+	 *     Negative values will send the mode REVERSE.
+	 * @param rightDutyCycle -255 to 255 value for the right duty cycle.
+	 */
 	public void sendWheelSpeed(int leftDutyCycle, int rightDutyCycle) {
 		mLeftDutyCycle = leftDutyCycle;
 		mRightDutyCycle = rightDutyCycle;

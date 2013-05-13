@@ -1,6 +1,5 @@
 package edu.rosehulman.me435;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -12,7 +11,6 @@ import android.net.Uri;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.util.Log;
-import android.view.View;
 
 /**
  * This class is a simple helper for doing TextToSpeech.  Create an instance
