@@ -375,7 +375,14 @@ public class NavUtils {
 				- centerPoint[0]);
 		double targetAngle = Math.atan2(targetY - centerPoint[1], targetX
 				- centerPoint[0]);
-		double arcAngle = Math.abs(robotAngle - targetAngle);
+		double arcAngle; // Note, arc angle Updated thanks to Dan Kahl.
+		// Check if arc traveled crosses over negative X-axis
+		if ((normalizeAngle(Math.round(robotHeading - Math.toDegrees(robotAngle))) == 90 && robotAngle > targetAngle)
+				|| (normalizeAngle(Math.round(robotHeading - Math.toDegrees(robotAngle))) == -90 && robotAngle < targetAngle)) {
+			arcAngle = (2 * Math.PI) - Math.abs(robotAngle - targetAngle);
+		} else {
+			arcAngle = Math.abs(robotAngle - targetAngle);
+		}
 		return Math.abs(radius) * arcAngle;
 	}
 }
