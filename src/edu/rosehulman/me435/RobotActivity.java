@@ -171,7 +171,7 @@ FieldOrientationListener {
 
 		// Assume you are on the red team to start the app (can be changed later).
 		mFieldGps = new FieldGps(this, RED_HOME_LATITUDE, RED_HOME_LONGITUDE, BLUE_HOME_LATITUDE, BLUE_HOME_LONGITUDE);
-		mFieldOrientation = new FieldOrientation(this, RED_HOME_LATITUDE, RED_HOME_LONGITUDE, BLUE_HOME_LATITUDE, BLUE_HOME_LONGITUDE);
+		mFieldOrientation = new FieldOrientation(this, BLUE_HOME_LATITUDE, BLUE_HOME_LONGITUDE, RED_HOME_LATITUDE, RED_HOME_LONGITUDE);
 		
 		// Prepare for TextToSpeech
 		mTts = new TextToSpeechHelper(this);
@@ -318,7 +318,7 @@ FieldOrientationListener {
 			}
 		}, 0, LOOP_INTERVAL_MS);
 	    mFieldOrientation.registerListener(this);
-		mFieldGps.requestLocationUpdates(this);
+	    mFieldGps.requestLocationUpdates(this, 1000, 0);
 	}
 
 	@Override
@@ -361,7 +361,7 @@ FieldOrientationListener {
 		// Set member variables to track movement type.
 		mMovingForward = mLeftDutyCycle > 30 && mRightDutyCycle > 30;
 		mMovingStraight = mLeftDutyCycle > 230 && mRightDutyCycle > 230;
-		String command = "WHEEL SPEED " + leftMode + " " + leftDutyCycle +
+		String command = "WHEEL SPEED " + leftMode + " " + leftDutyCycle + " " +
 				rightMode + " " + rightDutyCycle;
 		sendCommand(command);
 	}

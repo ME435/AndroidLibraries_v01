@@ -41,7 +41,7 @@ public class TextToSpeechHelper implements OnInitListener {
 	
 	/**
 	 * Stop the TextToSpeech engine.
-	 * Within the activities onDestroy method call this method.
+	 * Within the Activity's onDestroy method call this method.
 	 */
 	public void shutdown() {
 		if (mTts != null) {
@@ -58,18 +58,6 @@ public class TextToSpeechHelper implements OnInitListener {
 	 */
 	public void speak(String messageToSpeak) {
 		mTts.speak(messageToSpeak, TextToSpeech.QUEUE_FLUSH, null);
-	}
-	
-	/**
-	 * Stops all ringtones.
-	 */
-	public void stopRingtone() {
-		for (Ringtone r : mPlayingRingtones) {
-			if(r.isPlaying()) {
-				r.stop();
-			}
-		}
-		removeStoppedRingtones();
 	}
 	
 	
@@ -151,6 +139,20 @@ public class TextToSpeechHelper implements OnInitListener {
 		}
 	}
 	
+
+	/**
+	 * Stops all ringtones.
+	 */
+	public void stopRingtone() {
+		for (Ringtone r : mPlayingRingtones) {
+			if(r.isPlaying()) {
+				r.stop();
+			}
+		}
+		removeStoppedRingtones();
+	}
+	
+	
 	/**
 	 * Helper to remove ringtones that have already stopped.
 	 */
@@ -166,21 +168,21 @@ public class TextToSpeechHelper implements OnInitListener {
 
 	// ------------- OnInitListener method ----------------------------
 	/**
-	 * Method called when the TextToSpeech engine starts to determine if it
-	 * is successful.
+	 * Method called when the TextToSpeech engine starts to determine if it is
+	 * successful.
 	 */
 	@Override
 	public void onInit(int status) {
 		if (status == TextToSpeech.SUCCESS) {
-            int result = mTts.setLanguage(Locale.US);
-            if (result == TextToSpeech.LANG_MISSING_DATA
-                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.e(TAG, "This Language is not supported");
-            } else {
-            	Log.d(TAG, "TTS Ready");
-            }
-        } else {
-            Log.e(TAG, "TTS Initilization Failed!");
-        }		
+			int result = mTts.setLanguage(Locale.US);
+			if (result == TextToSpeech.LANG_MISSING_DATA
+					|| result == TextToSpeech.LANG_NOT_SUPPORTED) {
+				Log.e(TAG, "This Language is not supported");
+			} else {
+				Log.d(TAG, "TTS Ready");
+			}
+		} else {
+			Log.e(TAG, "TTS Initilization Failed!");
+		}
 	}
 }
