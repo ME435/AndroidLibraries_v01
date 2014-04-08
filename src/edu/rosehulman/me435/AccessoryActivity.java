@@ -41,16 +41,11 @@ public class AccessoryActivity extends SpeechRecognizingActivity {
 
       // Loop that runs forever (or until a -1 error state).
       while (ret >= 0) {
-			if (mAccessory != null && mFileDescriptor != null && mInputStream != null) {
-				try {
-					if (mInputStream.available() > 0) {
-						ret = mInputStream.read(buffer);					
-					}
-				} catch (IOException e) {
-					break;
-				}
-			}
-        
+        try {
+          ret = mInputStream.read(buffer);
+        } catch (IOException e) {
+          break;
+        }
         if (ret > 0) {
           // Convert the bytes into a string.
           String received = new String(buffer, 0, ret);
