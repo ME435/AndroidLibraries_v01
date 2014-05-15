@@ -106,7 +106,6 @@ public class FieldGps implements LocationListener {
    *          A context (usually an Activity) used to get the LocationManager.
    */
   public void requestLocationUpdates(Context context) {
-    mContext = context;
     requestLocationUpdates(mContext, DEFAULT_MIN_TIME_MS, DEFAULT_MIN_DISTANCE);
   }
 
@@ -125,6 +124,7 @@ public class FieldGps implements LocationListener {
    *          Distance in meters between GPS location updates.
    */
   public void requestLocationUpdates(Context context, long minTime_ms, float minDistance_meters) {
+    mContext = context;
     LocationManager locationManager = (LocationManager) context
         .getSystemService(Context.LOCATION_SERVICE);
     final boolean gpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
