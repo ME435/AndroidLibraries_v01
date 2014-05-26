@@ -219,7 +219,7 @@ public class FieldGps implements LocationListener {
   public void setOriginLocation(Location newOrigin) {
     mLatitudeOrigin = newOrigin.getLatitude();
     mLongitudeOrigin = newOrigin.getLongitude();
-    dispatchOnLocationChangedEvent(mLastGpsLocation);
+    dispatchOnLocationChangedEvent(newOrigin);
   }
 
   /** Change the field X axis location to last GPS reading. */
@@ -233,7 +233,7 @@ public class FieldGps implements LocationListener {
   public void setLocationOnXAxis(Location newLocationOnXAxis) {
     mLatitudeOnXAxis = newLocationOnXAxis.getLatitude();
     mLongitudeOnXAxis = newLocationOnXAxis.getLongitude();
-    dispatchOnLocationChangedEvent(mLastGpsLocation);
+    dispatchOnLocationChangedEvent(newLocationOnXAxis);
   }
   
   /** Return the last GPS Location received. */
