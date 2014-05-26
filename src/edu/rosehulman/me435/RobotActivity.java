@@ -7,7 +7,6 @@ import java.util.TimerTask;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.WindowManager;
 
 /** 
@@ -42,12 +41,8 @@ import android.view.WindowManager;
  * feedback.
  * 
  * @author fisherds@gmail.com (Dave Fisher)
- */
-public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsListener,
-    FieldOrientationListener {
-
-  /** TAG used in log messages set to RobotActivity. */
-  private static final String TAG = RobotActivity.class.getSimpleName();
+ * */
+public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsListener, FieldOrientationListener {
 
   /** Field GPS instance that gives field feet and field bearings. */
   protected FieldGps mFieldGps;
@@ -60,7 +55,7 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
 
   // GPS member variables.
   /** Most recent readings of the GPS. */
-  protected double mCurrentGpsX, mCurrentGpsY, mCurrentGpsHeading;
+  public double mCurrentGpsX, mCurrentGpsY, mCurrentGpsHeading;
 
   /** Counter that tracks the total number of GPS readings. */
   protected int mGpsCounter = 0;
@@ -97,7 +92,10 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
   protected int mGettingFartherAwayCounter = 0;
 
   /** When testing you can speak all GPS readings. Set to false to turn off. */
-  protected boolean mTalkingGps = true;
+  protected boolean mTalkingGps = false;
+  
+  /** Tracks when the TalkingGps last spoke to avoid cutting off debugging info. */
+  protected long mLastTalkTime = 0;
 
   // Movement
   /** Most recent sensor heading (updates MANY times per second). */
@@ -113,7 +111,7 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
   protected double mGuessX, mGuessY;
 
   /** Simple default robot speed used to determine the guess XY (adjust as necessary). */
-  public static final double DEFAULT_SPEED_FT_PER_SEC = 3.0;
+  public static final double DEFAULT_SPEED_FT_PER_SEC = 3.3;
 
   /** Current wheel duty cycle. Note always use sendWheelSpeed for robot commands. */
   protected int mLeftDutyCycle, mRightDutyCycle;
@@ -138,13 +136,12 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
   protected int mVoiceCommandAngle, mVoiceCommandDistance;
 
   // Field GPS locations
-  // TODO: Change as necessary to match the field.
   /** Latitude and Longitude values of the field home bases. */
-  public static final double RED_HOME_LATITUDE = 39.48579108058;
-  public static final double RED_HOME_LONGITUDE = -87.32197124182;
-  public static final double BLUE_HOME_LATITUDE = 39.48606291942;
-  public static final double BLUE_HOME_LONGITUDE = -87.32202075818;
-
+  public static final double RED_HOME_LATITUDE = 39.485297; // Middle of the end zone near the SRC
+  public static final double RED_HOME_LONGITUDE = -87.325922;
+  public static final double BLUE_HOME_LATITUDE = 39.485549; // Middle of the end zone near the tennis courts
+  public static final double BLUE_HOME_LONGITUDE = -87.324796;
+  
   /** Function called 10 times per second. */
   public void loop() {
     if (mMovingForward) {
@@ -188,7 +185,6 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
       Location.distanceBetween(BLUE_HOME_LATITUDE, BLUE_HOME_LONGITUDE, RED_HOME_LATITUDE, RED_HOME_LONGITUDE,
           originToXAxisLocation);
     }
-    Log.d(TAG, "Setting field bearing to " + originToXAxisLocation[1]);
     mFieldOrientation.setFieldBearing(originToXAxisLocation[1]);
   }
 
@@ -226,12 +222,9 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
       mCurrentGpsHeading = heading;
       if (mMovingStraight) {
         mFieldOrientation.setCurrentFieldHeading(mCurrentGpsHeading);
-        if (mTalkingGps) {
+        if (mTalkingGps && (System.currentTimeMillis() - mLastTalkTime > 3000)) {
+		  mLastTalkTime = System.currentTimeMillis();
           mTts.speak("" + (int) heading);
-        }
-      } else {
-        if (mTalkingGps) {
-          mTts.speak("heading");
         }
       }
     } else {
@@ -305,15 +298,14 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
     mFieldGps.removeUpdates();
   }
 
-  /** 
+  /**
    * ALWAYS use this method when sending a wheel speed command. It tracks the
    * latest command sent and keeps track of when the robot is going straight
    * forward to decide when to use GPS headings to reset the sensor heading.
    * 
    * @param leftDutyCycle -255 to 255 (0 to stop for the left wheel duty cycle)
-   * Negative values will send the mode REVERSE.
-   * @param rightDutyCycle -255 to 255 value for the right duty cycle.
-   */
+   *                      Negative values will send the mode REVERSE.
+   * @param rightDutyCycle -255 to 255 value for the right duty cycle. */
   public void sendWheelSpeed(int leftDutyCycle, int rightDutyCycle) {
     mLeftDutyCycle = leftDutyCycle;
     mRightDutyCycle = rightDutyCycle;
@@ -335,7 +327,7 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
     }
     // Set member variables to track movement type.
     mMovingForward = mLeftDutyCycle > 30 && mRightDutyCycle > 30;
-    mMovingStraight = mLeftDutyCycle > 80 && mRightDutyCycle > 80;
+    mMovingStraight = mLeftDutyCycle > 100 && mRightDutyCycle > 100;
     String command = "WHEEL SPEED " + leftMode + " " + leftDutyCycle + " " +
         rightMode + " " + rightDutyCycle;
     sendCommand(command);
@@ -344,10 +336,11 @@ public class RobotActivity extends SpeechAccessoryActivity implements FieldGpsLi
   // --------------- Audio Out for debugging -----------------------------
 
   /** Simple wrapper to allow subclasses to call speak instead of mTts.speak.
-   * Pretty optional, as it doesn't do much. Just showing the function is available.
+   * Pretty optional, as it doesn't do much. Just showing the function is
+   * available.
    * 
    * @param messageToSpeak String to speak. */
-  protected void speak(String messageToSpeak) {
+  public void speak(String messageToSpeak) {
     mTts.speak(messageToSpeak);
   }
 }

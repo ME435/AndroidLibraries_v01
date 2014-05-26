@@ -26,19 +26,15 @@ public class AccessoryActivity extends SpeechRecognizingActivity {
   private static final String ACTION_USB_PERMISSION = "edu.rosehulman.me435.action.USB_PERMISSION";
   private boolean mPermissionRequestPending;
   private UsbManager mUsbManager;
-  private UsbAccessory mAccessory;
   private ParcelFileDescriptor mFileDescriptor;
-  private FileInputStream mInputStream;
-  private FileOutputStream mOutputStream;
-
+  protected FileInputStream mInputStream;
+  protected FileOutputStream mOutputStream;
 
   // Rx runnable.
   private Runnable mRxRunnable = new Runnable() {
-
     public void run() {
       int ret = 0;
       byte[] buffer = new byte[255];
-
       // Loop that runs forever (or until a -1 error state).
       while (ret >= 0) {
         try {
@@ -78,7 +74,6 @@ public class AccessoryActivity extends SpeechRecognizingActivity {
         ACTION_USB_PERMISSION), 0);
 
     IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-    filter.addAction(UsbManager.ACTION_USB_ACCESSORY_DETACHED);
     registerReceiver(mUsbReceiver, filter);
   }
   
@@ -88,28 +83,26 @@ public class AccessoryActivity extends SpeechRecognizingActivity {
       String action = intent.getAction();
       if (ACTION_USB_PERMISSION.equals(action)) {
         synchronized (this) {
-          UsbAccessory accessory = (UsbAccessory) intent
-              .getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
-          if (intent.getBooleanExtra(
-              UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-            openAccessory(accessory);
+          UsbAccessory accessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
+          if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+            if (accessory != null) {
+              openAccessory(accessory);
+            }
           } else {
-            Log.d(TAG, "permission denied for accessory "
-                + accessory);
+            Log.d(TAG, "permission denied for accessory " + accessory);
           }
           mPermissionRequestPending = false;
         }
       } else if (UsbManager.ACTION_USB_ACCESSORY_DETACHED.equals(action)) {
-        UsbAccessory accessory = (UsbAccessory) intent
-            .getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
-        if (accessory != null && accessory.equals(mAccessory)) {
+        UsbAccessory accessory = (UsbAccessory) intent.getParcelableExtra(UsbManager.EXTRA_ACCESSORY);
+        if (accessory != null) {
           closeAccessory();
         }
       }
     }
   };
   
-  protected void sendCommand(String commandString) {
+  public void sendCommand(String commandString) {
     new AsyncTask<String, Void, Void>() {
       @Override
       protected Void doInBackground(String... params) {
@@ -157,7 +150,7 @@ public class AccessoryActivity extends SpeechRecognizingActivity {
         }
       }
     } else {
-      Log.d(TAG, "mAccessory is null.");
+      Log.d(TAG, "Accessory is null.");
     }
   }
 
@@ -166,7 +159,6 @@ public class AccessoryActivity extends SpeechRecognizingActivity {
     mFileDescriptor = mUsbManager.openAccessory(accessory);
     if (mFileDescriptor != null) {
       Log.d(TAG, "accessory opened");
-      mAccessory = accessory;
       FileDescriptor fd = mFileDescriptor.getFileDescriptor();
       mInputStream = new FileInputStream(fd);
       mOutputStream = new FileOutputStream(fd);
@@ -186,7 +178,6 @@ public class AccessoryActivity extends SpeechRecognizingActivity {
     } catch (IOException e) {
     } finally {
       mFileDescriptor = null;
-      mAccessory = null;
       mInputStream = null; 
       mOutputStream = null;
     }
@@ -203,18 +194,17 @@ public class AccessoryActivity extends SpeechRecognizingActivity {
     super.onDestroy();
     unregisterReceiver(mUsbReceiver);
   }
-
-	// ------------ Speech area --------------------------
-	// Intentionally not implemented here.
-	@Override
-	protected void speechNotAvailable() {}
-	@Override
-	protected void directSpeechNotAvailable() {}
-	@Override
-	protected void languageCheckResult(String languageToUse) {}
-	@Override
-	protected void receiveWhatWasHeard(List<String> heard,
-			float[] confidenceScores) {}
-	@Override
-	protected void recognitionFailure(int errorCode) {}
+  
+  // ------------ Speech area --------------------------
+  // Intentionally not implemented here.  See superclass.
+  @Override
+  protected void speechNotAvailable() {}
+  @Override
+  protected void directSpeechNotAvailable() {}
+  @Override
+  protected void languageCheckResult(String languageToUse) {}
+  @Override
+  protected void receiveWhatWasHeard(List<String> heard, float[] confidenceScores) {}
+  @Override
+  protected void recognitionFailure(int errorCode) {}
 }
