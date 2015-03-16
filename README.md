@@ -1,3 +1,4 @@
+This repo is now deprecated.  It has bee replaced by https://github.com/ME435/ME435AndroidLibrary
 ME435 Libraries
 ==========
 
